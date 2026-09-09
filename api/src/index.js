@@ -183,69 +183,11 @@ async function handleProxyRequest(request, env, ctx) {
   }
 }
 
-const DEFAULT_CONFIG_URL = 'https://api.vmd1.dev/v1/config/qerobotics-stats';
-
-// Team numbers live in the shared vmd1 config service, not this Worker -
-// always read them fresh so warming never drifts from what the site actually shows.
-async function getTeamNumbers(env) {
-  try {
-    const res = await fetch(env.CONFIG_URL || DEFAULT_CONFIG_URL, {
-      headers: { Accept: 'application/json' }
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    const teams = data && data.teams ? data.teams : {};
-    return Object.values(teams).flat().filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
-// Proactively refresh caches for the configured teams so real user requests
-// almost always land on a warm KV entry instead of triggering an upstream call.
-async function warmCache(env, ctx) {
-  const apiKey = env.VEX_API_KEY;
-  const targetBase = env.VEX_API_BASE_URL || 'https://events.vex.com/api/v2';
-  const teamNumbers = await getTeamNumbers(env);
-  if (!apiKey || teamNumbers.length === 0) return;
-
-  const fetchAndCache = async (pathname, search = '') => {
-    const targetUrl = new URL(`${targetBase}${pathname}${search}`);
-    const cacheKey = buildCacheKey(targetUrl);
-    const { hardTtl } = ttlFor(pathname);
-    const result = await fetchUpstream(targetUrl, apiKey);
-    if (result.status === 200) {
-      await env.PROXY_CACHE.put(
-        cacheKey,
-        JSON.stringify({ storedAt: Date.now(), data: result.body }),
-        { expirationTtl: hardTtl }
-      );
-    }
-    return result;
-  };
-
-  const teamsSearch = '?' + teamNumbers.map((n) => `number[]=${encodeURIComponent(n)}`).join('&') + '&per_page=100';
-  const teamsResult = await fetchAndCache('/teams', teamsSearch);
-  const teamIds = teamsResult.status === 200 ? (teamsResult.body.data || []).map((t) => t.id) : [];
-
-  // Warm sub-resources with a small stagger so we don't burst the upstream ourselves.
-  for (const teamId of teamIds) {
-    for (const sub of ['skills', 'rankings', 'awards', 'events']) {
-      await fetchAndCache(`/teams/${teamId}/${sub}`, '?per_page=100');
-    }
-    await fetchAndCache(`/teams/${teamId}/matches`, '?page=1&per_page=100');
-  }
-}
-
 export default {
   async fetch(request, env, ctx) {
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
     return handleProxyRequest(request, env, ctx);
-  },
-
-  async scheduled(event, env, ctx) {
-    ctx.waitUntil(warmCache(env, ctx));
   }
 };
