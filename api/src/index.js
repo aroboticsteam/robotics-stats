@@ -7,17 +7,20 @@ const CORS_HEADERS = {
 
 // How long a cached entry is served without triggering a background refresh,
 // and the hard KV expiry (entry is dropped and refetched synchronously after this).
-// Slow-changing data (season/team metadata, historical skills/rankings/awards) gets
-// long TTLs; match data during live events gets a short one.
+// This site shows historical/all-time stats, not live in-competition scoring, so
+// TTLs are chosen to keep KV write volume well under the free-tier daily cap
+// (1,000 writes/day) rather than to chase near-real-time freshness. The matches
+// endpoint is paginated up to 6 pages per team, which multiplies its write count,
+// so it gets the same long TTL as everything else instead of a short one.
 const TTL_RULES = [
-  { pattern: /^\/teams\/\d+\/matches$/, freshTtl: 300, hardTtl: 86400 },
-  { pattern: /^\/events\/[^/]+\/divisions\/[^/]+\/matches$/, freshTtl: 180, hardTtl: 86400 },
-  { pattern: /^\/teams\/\d+\/(skills|rankings|awards|events)$/, freshTtl: 3600, hardTtl: 604800 },
-  { pattern: /^\/teams$/, freshTtl: 3600, hardTtl: 604800 },
+  { pattern: /^\/teams\/\d+\/matches$/, freshTtl: 7200, hardTtl: 604800 },
+  { pattern: /^\/events\/[^/]+\/divisions\/[^/]+\/matches$/, freshTtl: 7200, hardTtl: 604800 },
+  { pattern: /^\/teams\/\d+\/(skills|rankings|awards|events)$/, freshTtl: 7200, hardTtl: 604800 },
+  { pattern: /^\/teams$/, freshTtl: 7200, hardTtl: 604800 },
   { pattern: /^\/seasons/, freshTtl: 21600, hardTtl: 604800 },
-  { pattern: /^\/events/, freshTtl: 3600, hardTtl: 604800 }
+  { pattern: /^\/events/, freshTtl: 7200, hardTtl: 604800 }
 ];
-const DEFAULT_TTL = { freshTtl: 600, hardTtl: 86400 };
+const DEFAULT_TTL = { freshTtl: 1800, hardTtl: 86400 };
 
 function ttlFor(pathname) {
   const rule = TTL_RULES.find((r) => r.pattern.test(pathname));
