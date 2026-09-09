@@ -5,10 +5,236 @@ const CORS_HEADERS = {
   'Access-Control-Max-Age': '86400'
 };
 
-const KV_TTL_SECONDS = 600; // 10 minutes
+// How long a cached entry is served without triggering a background refresh,
+// and the hard KV expiry (entry is dropped and refetched synchronously after this).
+// Slow-changing data (season/team metadata, historical skills/rankings/awards) gets
+// long TTLs; match data during live events gets a short one.
+const TTL_RULES = [
+  { pattern: /^\/teams\/\d+\/matches$/, freshTtl: 300, hardTtl: 86400 },
+  { pattern: /^\/events\/[^/]+\/divisions\/[^/]+\/matches$/, freshTtl: 180, hardTtl: 86400 },
+  { pattern: /^\/teams\/\d+\/(skills|rankings|awards|events)$/, freshTtl: 3600, hardTtl: 604800 },
+  { pattern: /^\/teams$/, freshTtl: 3600, hardTtl: 604800 },
+  { pattern: /^\/seasons/, freshTtl: 21600, hardTtl: 604800 },
+  { pattern: /^\/events/, freshTtl: 3600, hardTtl: 604800 }
+];
+const DEFAULT_TTL = { freshTtl: 600, hardTtl: 86400 };
+
+function ttlFor(pathname) {
+  const rule = TTL_RULES.find((r) => r.pattern.test(pathname));
+  return rule || DEFAULT_TTL;
+}
 
 function buildCacheKey(targetUrl) {
   return `proxy:${targetUrl.toString()}`;
+}
+
+// Per-isolate in-flight request map: collapses concurrent identical requests
+// (cold cache stampede, or a revalidation racing a fresh miss) into one upstream call.
+const IN_FLIGHT = new Map();
+
+async function fetchUpstream(targetUrl, apiKey) {
+  const key = targetUrl.toString();
+  if (IN_FLIGHT.has(key)) {
+    return IN_FLIGHT.get(key);
+  }
+
+  const headers = new Headers();
+  headers.set('Authorization', `Bearer ${apiKey}`);
+  headers.set('Accept', 'application/json');
+  headers.set(
+    'User-Agent',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  );
+
+  const promise = fetch(key, { method: 'GET', headers })
+    .then(async (response) => ({
+      status: response.status,
+      body: response.status === 200 ? await response.json() : await response.text()
+    }))
+    .finally(() => {
+      IN_FLIGHT.delete(key);
+    });
+
+  IN_FLIGHT.set(key, promise);
+  return promise;
+}
+
+async function revalidate(targetUrl, apiKey, cache, cacheKey, hardTtl) {
+  try {
+    const result = await fetchUpstream(targetUrl, apiKey);
+    if (result.status === 200) {
+      await cache.put(
+        cacheKey,
+        JSON.stringify({ storedAt: Date.now(), data: result.body }),
+        { expirationTtl: hardTtl }
+      );
+    }
+  } catch {
+    // Stale data already served; a future request will retry.
+  }
+}
+
+async function handleProxyRequest(request, env, ctx) {
+  const url = new URL(request.url);
+  const targetBase = env.VEX_API_BASE_URL || 'https://events.vex.com/api/v2';
+  const apiKey = env.VEX_API_KEY;
+
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({ error: 'Proxy misconfigured: VEX_API_KEY secret is not set' }),
+      { status: 500, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
+    );
+  }
+
+  let pathname = url.pathname;
+  if (pathname.startsWith('/v1/vex')) {
+    pathname = pathname.replace(/^\/v1\/vex/, '');
+  } else if (pathname.startsWith('/api/v2')) {
+    pathname = pathname.replace(/^\/api\/v2/, '');
+  }
+  if (!pathname.startsWith('/')) {
+    pathname = '/' + pathname;
+  }
+
+  const targetUrl = new URL(`${targetBase}${pathname}${url.search}`);
+  const cacheKey = buildCacheKey(targetUrl);
+  const { freshTtl, hardTtl } = ttlFor(pathname);
+  const cache = env.PROXY_CACHE;
+
+  if (request.method === 'GET') {
+    const cached = await cache.get(cacheKey, { type: 'json' });
+    if (cached) {
+      const age = (Date.now() - cached.storedAt) / 1000;
+      if (age > freshTtl) {
+        ctx.waitUntil(revalidate(targetUrl, apiKey, cache, cacheKey, hardTtl));
+      }
+      return new Response(JSON.stringify(cached.data), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': `public, max-age=${freshTtl}`,
+          'X-Proxy-Cache': age > freshTtl ? 'KV_STALE' : 'KV_HIT',
+          'Age': String(Math.floor(age)),
+          ...CORS_HEADERS
+        }
+      });
+    }
+  }
+
+  try {
+    const result = await fetchUpstream(targetUrl, apiKey);
+
+    if (result.status === 429 || result.status === 403) {
+      const stale = await cache.get(cacheKey, { type: 'json' });
+      if (stale) {
+        return new Response(JSON.stringify(stale.data), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Proxy-Cache': 'STALE_KV_FALLBACK',
+            ...CORS_HEADERS
+          }
+        });
+      }
+      return new Response(
+        JSON.stringify({
+          error: 'Upstream VEX API Rate Limited',
+          details: String(result.body).slice(0, 200),
+          status: result.status
+        }),
+        {
+          status: 429,
+          headers: { 'Content-Type': 'application/json', 'Retry-After': '5', ...CORS_HEADERS }
+        }
+      );
+    }
+
+    if (result.status === 200) {
+      if (request.method === 'GET') {
+        ctx.waitUntil(
+          cache.put(
+            cacheKey,
+            JSON.stringify({ storedAt: Date.now(), data: result.body }),
+            { expirationTtl: hardTtl }
+          )
+        );
+      }
+
+      return new Response(JSON.stringify(result.body), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': `public, max-age=${freshTtl}`,
+          'X-Proxy-Cache': 'MISS',
+          ...CORS_HEADERS
+        }
+      });
+    }
+
+    return new Response(String(result.body), {
+      status: result.status,
+      headers: { ...CORS_HEADERS }
+    });
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ error: 'VEX Proxy Gateway Error', message: err.message }),
+      { status: 502, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
+    );
+  }
+}
+
+const DEFAULT_CONFIG_URL = 'https://api.vmd1.dev/v1/config/qerobotics-stats';
+
+// Team numbers live in the shared vmd1 config service, not this Worker -
+// always read them fresh so warming never drifts from what the site actually shows.
+async function getTeamNumbers(env) {
+  try {
+    const res = await fetch(env.CONFIG_URL || DEFAULT_CONFIG_URL, {
+      headers: { Accept: 'application/json' }
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const teams = data && data.teams ? data.teams : {};
+    return Object.values(teams).flat().filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+// Proactively refresh caches for the configured teams so real user requests
+// almost always land on a warm KV entry instead of triggering an upstream call.
+async function warmCache(env, ctx) {
+  const apiKey = env.VEX_API_KEY;
+  const targetBase = env.VEX_API_BASE_URL || 'https://events.vex.com/api/v2';
+  const teamNumbers = await getTeamNumbers(env);
+  if (!apiKey || teamNumbers.length === 0) return;
+
+  const fetchAndCache = async (pathname, search = '') => {
+    const targetUrl = new URL(`${targetBase}${pathname}${search}`);
+    const cacheKey = buildCacheKey(targetUrl);
+    const { hardTtl } = ttlFor(pathname);
+    const result = await fetchUpstream(targetUrl, apiKey);
+    if (result.status === 200) {
+      await env.PROXY_CACHE.put(
+        cacheKey,
+        JSON.stringify({ storedAt: Date.now(), data: result.body }),
+        { expirationTtl: hardTtl }
+      );
+    }
+    return result;
+  };
+
+  const teamsSearch = '?' + teamNumbers.map((n) => `number[]=${encodeURIComponent(n)}`).join('&') + '&per_page=100';
+  const teamsResult = await fetchAndCache('/teams', teamsSearch);
+  const teamIds = teamsResult.status === 200 ? (teamsResult.body.data || []).map((t) => t.id) : [];
+
+  // Warm sub-resources with a small stagger so we don't burst the upstream ourselves.
+  for (const teamId of teamIds) {
+    for (const sub of ['skills', 'rankings', 'awards', 'events']) {
+      await fetchAndCache(`/teams/${teamId}/${sub}`, '?per_page=100');
+    }
+    await fetchAndCache(`/teams/${teamId}/matches`, '?page=1&per_page=100');
+  }
 }
 
 export default {
@@ -16,115 +242,10 @@ export default {
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
+    return handleProxyRequest(request, env, ctx);
+  },
 
-    const url = new URL(request.url);
-    const targetBase = env.VEX_API_BASE_URL || 'https://events.vex.com/api/v2';
-    const apiKey = env.VEX_API_KEY;
-
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ error: 'Proxy misconfigured: VEX_API_KEY secret is not set' }),
-        { status: 500, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
-      );
-    }
-
-    let pathname = url.pathname;
-    if (pathname.startsWith('/v1/vex')) {
-      pathname = pathname.replace(/^\/v1\/vex/, '');
-    } else if (pathname.startsWith('/api/v2')) {
-      pathname = pathname.replace(/^\/api\/v2/, '');
-    }
-    if (!pathname.startsWith('/')) {
-      pathname = '/' + pathname;
-    }
-
-    const targetUrl = new URL(`${targetBase}${pathname}${url.search}`);
-    const cacheKey = buildCacheKey(targetUrl);
-
-    if (request.method === 'GET') {
-      const cached = await env.PROXY_CACHE.get(cacheKey, { type: 'json' });
-      if (cached) {
-        return new Response(JSON.stringify(cached), {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': `public, max-age=${KV_TTL_SECONDS}`,
-            'X-Proxy-Cache': 'KV_HIT',
-            ...CORS_HEADERS
-          }
-        });
-      }
-    }
-
-    const upstreamHeaders = new Headers();
-    upstreamHeaders.set('Authorization', `Bearer ${apiKey}`);
-    upstreamHeaders.set('Accept', 'application/json');
-    upstreamHeaders.set(
-      'User-Agent',
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    );
-
-    try {
-      const response = await fetch(targetUrl.toString(), {
-        method: request.method,
-        headers: upstreamHeaders
-      });
-
-      if (response.status === 429 || response.status === 403) {
-        const stale = await env.PROXY_CACHE.get(cacheKey, { type: 'json' });
-        if (stale) {
-          return new Response(JSON.stringify(stale), {
-            status: 200,
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Proxy-Cache': 'STALE_KV_FALLBACK',
-              ...CORS_HEADERS
-            }
-          });
-        }
-        const errText = await response.text();
-        return new Response(
-          JSON.stringify({
-            error: 'Upstream VEX API Rate Limited',
-            details: errText.slice(0, 200),
-            status: response.status
-          }),
-          {
-            status: 429,
-            headers: { 'Content-Type': 'application/json', 'Retry-After': '5', ...CORS_HEADERS }
-          }
-        );
-      }
-
-      if (response.status === 200) {
-        const data = await response.json();
-
-        if (request.method === 'GET') {
-          ctx.waitUntil(
-            env.PROXY_CACHE.put(cacheKey, JSON.stringify(data), { expirationTtl: KV_TTL_SECONDS })
-          );
-        }
-
-        return new Response(JSON.stringify(data), {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': `public, max-age=${KV_TTL_SECONDS}`,
-            'X-Proxy-Cache': 'MISS',
-            ...CORS_HEADERS
-          }
-        });
-      }
-
-      return new Response(response.body, {
-        status: response.status,
-        headers: { ...CORS_HEADERS }
-      });
-    } catch (err) {
-      return new Response(
-        JSON.stringify({ error: 'VEX Proxy Gateway Error', message: err.message }),
-        { status: 502, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
-      );
-    }
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(warmCache(env, ctx));
   }
 };

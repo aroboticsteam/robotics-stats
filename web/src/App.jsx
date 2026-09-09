@@ -557,10 +557,6 @@ export default function App() {
 
         {/* Hero Title & Live Status */}
         <div className="text-center pt-6 pb-1 max-w-[1600px] mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1b2b45]/80 border border-[#cbb58c]/30 text-xs font-semibold text-[#e8d7b8] uppercase tracking-wider mb-2">
-            <Activity className="w-3.5 h-3.5 text-emerald-400" />
-            Live {selectedProgram} Competition Analytics ({selectedSeasonId === 'all' ? 'Historical All-Time' : 'Current Season'})
-          </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-normal tracking-tight text-white/95">
             Queen Elizabeth's School Robotics Stats ({selectedProgram})
           </h1>
@@ -794,7 +790,7 @@ export default function App() {
                     <tr>
                       <td colSpan={10} className="py-12 text-center text-slate-400">
                         <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#cbb58c] mb-2" />
-                        Loading live skills telemetry via secure proxy...
+                        Syncing...
                       </td>
                     </tr>
                   ) : processedSkillsLeaderboard.length === 0 ? (

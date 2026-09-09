@@ -9,6 +9,12 @@ preview_id = "ee75eda766f04364a93d8f8b3bf466cc"
 
 [vars]
 VEX_API_BASE_URL = "https://events.vex.com/api/v2"
+# Team numbers to warm the KV cache for are fetched live from this endpoint
+# on each cron run (see getTeamNumbers() in src/index.js) rather than hardcoded here.
+CONFIG_URL = "https://api.vmd1.dev/v1/config/qerobotics-stats"
+
+[triggers]
+crons = ["*/15 * * * *"]
 
 # Secrets (do NOT put these here):
 #   wrangler secret put VEX_API_KEY
