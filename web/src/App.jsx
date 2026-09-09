@@ -505,14 +505,19 @@ export default function App() {
           
           {/* Left: sponsor Logo & Home Link */}
           <div className="flex items-center justify-center md:justify-start gap-3">
-            <div className="bg-white px-3.5 py-1.5 rounded-xl transition-all duration-300 shadow-md flex items-center justify-center hover:shadow-lg">
-              <img 
-                src="/logos/sponsor.png" 
-                alt="Sponsor" 
-                className="h-8 sm:h-9 w-auto object-contain"
+            <a
+              href="https://example.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white px-3.5 py-1.5 rounded-xl transition-all duration-300 shadow-md flex items-center justify-center hover:shadow-lg"
+            >
+              <img
+                src="/logos/sponsor.png"
+                alt="Sponsor"
+                className="h-8 sm:h-9 w-auto object-contain hover:scale-105 transition-transform duration-300"
               />
-            </div>
-            
+            </a>
+
             {/* Customisable Home Link */}
             <a 
               href={homeUrl}
@@ -526,11 +531,13 @@ export default function App() {
 
           {/* Center: team School Logo (Strictly Centred) */}
           <div className="flex flex-col items-center justify-center text-center">
-            <img 
-              src="/logos/logo.png" 
-              alt="Logo" 
-              className="h-20 sm:h-24 md:h-28 w-auto object-contain drop-shadow-lg hover:scale-105 transition-transform duration-300 mx-auto"
-            />
+            <a href="https://example.org" target="_blank" rel="noopener noreferrer">
+              <img
+                src="/logos/logo.png"
+                alt="Logo"
+                className="h-20 sm:h-24 md:h-28 w-auto object-contain drop-shadow-lg hover:scale-105 transition-transform duration-300 mx-auto"
+              />
+            </a>
           </div>
 
           {/* Right: Actions & Config button */}
