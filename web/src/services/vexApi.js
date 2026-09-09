@@ -58,13 +58,43 @@ export function clearLocalStorageCache() {
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Cap simultaneous in-flight requests to the proxy so a cold cache (e.g. many
+// teams loading at once) trickles requests out instead of bursting them, which
+// is what tends to trip the upstream VEX API's rate limit.
+const MAX_CONCURRENT_REQUESTS = 4;
+let activeRequests = 0;
+const requestQueue = [];
+
+function runWithConcurrencyLimit(task) {
+  return new Promise((resolve, reject) => {
+    const run = async () => {
+      activeRequests++;
+      try {
+        resolve(await task());
+      } catch (err) {
+        reject(err);
+      } finally {
+        activeRequests--;
+        const next = requestQueue.shift();
+        if (next) next();
+      }
+    };
+
+    if (activeRequests < MAX_CONCURRENT_REQUESTS) {
+      run();
+    } else {
+      requestQueue.push(run);
+    }
+  });
+}
+
 /**
  * Fetch from proxy gateway with localStorage caching, automatic retry on 429, and pagination
  */
 async function fetchWithCache(path, params = {}, retryCount = 0) {
   const baseUrl = getApiBaseUrl();
   const searchParams = new URLSearchParams();
-  
+
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== null) {
       if (Array.isArray(v)) {
@@ -84,14 +114,18 @@ async function fetchWithCache(path, params = {}, retryCount = 0) {
     return cached;
   }
 
-  const response = await fetch(fullUrl, {
-    headers: {
-      'Accept': 'application/json'
-    }
-  });
+  const response = await runWithConcurrencyLimit(() =>
+    fetch(fullUrl, { headers: { 'Accept': 'application/json' } })
+  );
 
   if (response.status === 429 && retryCount < 3) {
-    await wait(1200 * (retryCount + 1));
+    const retryAfterHeader = Number(response.headers.get('Retry-After'));
+    const retryAfterMs = Number.isFinite(retryAfterHeader) && retryAfterHeader > 0
+      ? retryAfterHeader * 1000
+      : 1200 * (retryCount + 1);
+    // Jitter avoids many clients retrying in lockstep and re-triggering the limit together.
+    const jitter = Math.random() * 500;
+    await wait(retryAfterMs + jitter);
     return fetchWithCache(path, params, retryCount + 1);
   }
 
