@@ -62,9 +62,55 @@ async function fetchUpstream(targetUrl, apiKey) {
   return promise;
 }
 
-async function revalidate(targetUrl, apiKey, cache, cacheKey, hardTtl) {
+const MATCHES_PATTERN = /^\/teams\/\d+\/matches$/;
+const UPSTREAM_MAX_PER_PAGE = 250; // VEX API's documented maximum
+const MAX_MATCH_PAGES = 10; // 2,500 matches - far beyond any team's real history
+
+// A team's full match history is paginated upstream. Caching each page under its
+// own key multiplies KV writes by page count every time it goes stale. Instead,
+// fetch and merge every page into a single blob cached under one key per team -
+// one write per revalidation instead of up to several.
+async function fetchAllMatches(targetBase, pathname, keptParams, apiKey) {
+  let allData = [];
+  let meta = null;
+
+  for (let page = 1; page <= MAX_MATCH_PAGES; page++) {
+    const params = new URLSearchParams(keptParams);
+    params.set('page', String(page));
+    params.set('per_page', String(UPSTREAM_MAX_PER_PAGE));
+    const pageUrl = new URL(`${targetBase}${pathname}?${params.toString()}`);
+
+    const result = await fetchUpstream(pageUrl, apiKey);
+    if (result.status !== 200) {
+      return page === 1 ? result : { status: 200, body: { meta, data: allData } };
+    }
+
+    meta = result.body.meta;
+    const data = result.body.data || [];
+    allData = allData.concat(data);
+
+    const lastPage = meta && meta.last_page ? meta.last_page : page;
+    if (page >= lastPage || data.length === 0) break;
+  }
+
+  return { status: 200, body: { meta, data: allData } };
+}
+
+// Strip page/per_page from a request's query params - the worker always fetches
+// and caches the full merged result regardless of what pagination a caller asks
+// for, so those params must not fragment the cache key.
+function nonPaginationParams(search) {
+  const params = new URLSearchParams(search);
+  params.delete('page');
+  params.delete('per_page');
+  return params;
+}
+
+async function revalidate(pathname, targetBase, keptParams, apiKey, cache, cacheKey, hardTtl) {
   try {
-    const result = await fetchUpstream(targetUrl, apiKey);
+    const result = MATCHES_PATTERN.test(pathname)
+      ? await fetchAllMatches(targetBase, pathname, keptParams, apiKey)
+      : await fetchUpstream(new URL(`${targetBase}${pathname}?${keptParams.toString()}`), apiKey);
     if (result.status === 200) {
       await cache.put(
         cacheKey,
@@ -99,7 +145,9 @@ async function handleProxyRequest(request, env, ctx) {
     pathname = '/' + pathname;
   }
 
-  const targetUrl = new URL(`${targetBase}${pathname}${url.search}`);
+  const isMatches = MATCHES_PATTERN.test(pathname);
+  const keptParams = isMatches ? nonPaginationParams(url.search) : new URLSearchParams(url.search);
+  const targetUrl = new URL(`${targetBase}${pathname}?${keptParams.toString()}`);
   const cacheKey = buildCacheKey(targetUrl);
   const { freshTtl, hardTtl } = ttlFor(pathname);
   const cache = env.PROXY_CACHE;
@@ -109,7 +157,7 @@ async function handleProxyRequest(request, env, ctx) {
     if (cached) {
       const age = (Date.now() - cached.storedAt) / 1000;
       if (age > freshTtl) {
-        ctx.waitUntil(revalidate(targetUrl, apiKey, cache, cacheKey, hardTtl));
+        ctx.waitUntil(revalidate(pathname, targetBase, keptParams, apiKey, cache, cacheKey, hardTtl));
       }
       return new Response(JSON.stringify(cached.data), {
         status: 200,
@@ -125,7 +173,9 @@ async function handleProxyRequest(request, env, ctx) {
   }
 
   try {
-    const result = await fetchUpstream(targetUrl, apiKey);
+    const result = isMatches
+      ? await fetchAllMatches(targetBase, pathname, keptParams, apiKey)
+      : await fetchUpstream(targetUrl, apiKey);
 
     if (result.status === 429 || result.status === 403) {
       const stale = await cache.get(cacheKey, { type: 'json' });
