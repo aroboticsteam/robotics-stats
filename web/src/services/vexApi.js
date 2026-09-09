@@ -139,31 +139,6 @@ async function fetchWithCache(path, params = {}, retryCount = 0) {
 }
 
 /**
- * Helper to fetch all pages for high-volume endpoints (e.g. matches)
- */
-async function fetchAllPages(path, params = {}, maxPages = 6) {
-  let allData = [];
-  let page = 1;
-  let hasNext = true;
-
-  while (hasNext && page <= maxPages) {
-    const pageParams = { ...params, page, per_page: 100 };
-    const res = await fetchWithCache(path, pageParams);
-    const data = res.data || [];
-    allData = allData.concat(data);
-
-    if (res.meta && res.meta.last_page) {
-      hasNext = page < res.meta.last_page;
-    } else {
-      hasNext = data.length === 100;
-    }
-    page++;
-  }
-
-  return allData;
-}
-
-/**
  * Get available seasons
  */
 export async function getSeasons() {
@@ -220,14 +195,16 @@ export async function getTeamAwards(teamId, seasonId = null) {
 }
 
 /**
- * Fetch team matches (with pagination so >100 historical matches are retrieved)
+ * Fetch a team's full match history. The proxy fetches and merges every
+ * upstream page server-side, so this is always a single request.
  */
 export async function getTeamMatches(teamId, seasonId = null) {
   const params = {};
   if (seasonId) {
     params.season = [seasonId];
   }
-  return await fetchAllPages(`/teams/${teamId}/matches`, params, 6);
+  const json = await fetchWithCache(`/teams/${teamId}/matches`, params);
+  return json.data || [];
 }
 
 /**
