@@ -159,10 +159,12 @@ export async function getTeamsByNumbers(teamNumbers) {
 }
 
 /**
- * Fetch team skills scores
+ * Fetch a team's full skills/rankings/awards/events/matches history. The
+ * proxy fetches and merges every upstream page server-side and always
+ * returns the complete set, so no pagination params are needed here.
  */
 export async function getTeamSkills(teamId, seasonId = null) {
-  const params = { per_page: 100 };
+  const params = {};
   if (seasonId) {
     params.season = [seasonId];
   }
@@ -170,11 +172,8 @@ export async function getTeamSkills(teamId, seasonId = null) {
   return json.data || [];
 }
 
-/**
- * Fetch team rankings
- */
 export async function getTeamRankings(teamId, seasonId = null) {
-  const params = { per_page: 100 };
+  const params = {};
   if (seasonId) {
     params.season = [seasonId];
   }
@@ -182,11 +181,8 @@ export async function getTeamRankings(teamId, seasonId = null) {
   return json.data || [];
 }
 
-/**
- * Fetch team awards
- */
 export async function getTeamAwards(teamId, seasonId = null) {
-  const params = { per_page: 100 };
+  const params = {};
   if (seasonId) {
     params.season = [seasonId];
   }
@@ -194,10 +190,6 @@ export async function getTeamAwards(teamId, seasonId = null) {
   return json.data || [];
 }
 
-/**
- * Fetch a team's full match history. The proxy fetches and merges every
- * upstream page server-side, so this is always a single request.
- */
 export async function getTeamMatches(teamId, seasonId = null) {
   const params = {};
   if (seasonId) {
@@ -207,11 +199,8 @@ export async function getTeamMatches(teamId, seasonId = null) {
   return json.data || [];
 }
 
-/**
- * Fetch team events
- */
 export async function getTeamEvents(teamId, seasonId = null) {
-  const params = { per_page: 100 };
+  const params = {};
   if (seasonId) {
     params.season = [seasonId];
   }

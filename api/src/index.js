@@ -62,19 +62,21 @@ async function fetchUpstream(targetUrl, apiKey) {
   return promise;
 }
 
-const MATCHES_PATTERN = /^\/teams\/\d+\/matches$/;
+// Per-team endpoints that are paginated upstream and whose full history this
+// site needs (not just the first per_page items). Caching each page under its
+// own key multiplies KV writes by page count every time it goes stale, and
+// capping at one page silently truncates a team's data once it grows past
+// per_page. Both are solved the same way: fetch and merge every upstream page
+// into one blob cached under a single key per team.
+const AGGREGATED_PATTERN = /^\/teams\/\d+\/(matches|skills|rankings|awards|events)$/;
 const UPSTREAM_MAX_PER_PAGE = 250; // VEX API's documented maximum
-const MAX_MATCH_PAGES = 10; // 2,500 matches - far beyond any team's real history
+const MAX_AGGREGATE_PAGES = 10; // 2,500 records - far beyond any team's real history
 
-// A team's full match history is paginated upstream. Caching each page under its
-// own key multiplies KV writes by page count every time it goes stale. Instead,
-// fetch and merge every page into a single blob cached under one key per team -
-// one write per revalidation instead of up to several.
-async function fetchAllMatches(targetBase, pathname, keptParams, apiKey) {
+async function fetchAllPages(targetBase, pathname, keptParams, apiKey) {
   let allData = [];
   let meta = null;
 
-  for (let page = 1; page <= MAX_MATCH_PAGES; page++) {
+  for (let page = 1; page <= MAX_AGGREGATE_PAGES; page++) {
     const params = new URLSearchParams(keptParams);
     params.set('page', String(page));
     params.set('per_page', String(UPSTREAM_MAX_PER_PAGE));
@@ -108,8 +110,8 @@ function nonPaginationParams(search) {
 
 async function revalidate(pathname, targetBase, keptParams, apiKey, cache, cacheKey, hardTtl) {
   try {
-    const result = MATCHES_PATTERN.test(pathname)
-      ? await fetchAllMatches(targetBase, pathname, keptParams, apiKey)
+    const result = AGGREGATED_PATTERN.test(pathname)
+      ? await fetchAllPages(targetBase, pathname, keptParams, apiKey)
       : await fetchUpstream(new URL(`${targetBase}${pathname}?${keptParams.toString()}`), apiKey);
     if (result.status === 200) {
       await cache.put(
@@ -145,8 +147,8 @@ async function handleProxyRequest(request, env, ctx) {
     pathname = '/' + pathname;
   }
 
-  const isMatches = MATCHES_PATTERN.test(pathname);
-  const keptParams = isMatches ? nonPaginationParams(url.search) : new URLSearchParams(url.search);
+  const isAggregated = AGGREGATED_PATTERN.test(pathname);
+  const keptParams = isAggregated ? nonPaginationParams(url.search) : new URLSearchParams(url.search);
   const targetUrl = new URL(`${targetBase}${pathname}?${keptParams.toString()}`);
   const cacheKey = buildCacheKey(targetUrl);
   const { freshTtl, hardTtl } = ttlFor(pathname);
@@ -173,8 +175,8 @@ async function handleProxyRequest(request, env, ctx) {
   }
 
   try {
-    const result = isMatches
-      ? await fetchAllMatches(targetBase, pathname, keptParams, apiKey)
+    const result = isAggregated
+      ? await fetchAllPages(targetBase, pathname, keptParams, apiKey)
       : await fetchUpstream(targetUrl, apiKey);
 
     if (result.status === 429 || result.status === 403) {
