@@ -529,16 +529,8 @@ export default function App() {
             </a>
           </div>
 
-          {/* Center: QE School Logo (Strictly Centred) */}
-          <div className="flex flex-col items-center justify-center text-center">
-            <a href="https://www.qebarnet.co.uk" target="_blank" rel="noopener noreferrer">
-              <img
-                src="/logos/qe-school.png"
-                alt="Queen Elizabeth's School - Founded in 1573"
-                className="h-20 sm:h-24 md:h-28 w-auto object-contain drop-shadow-lg hover:scale-105 transition-transform duration-300 mx-auto"
-              />
-            </a>
-          </div>
+          {/* Center spacer to keep the header grid balanced */}
+          <div className="hidden md:block" />
 
           {/* Right: Actions & Config button */}
           <div className="flex items-center justify-center md:justify-end gap-2.5 flex-wrap">
@@ -565,7 +557,7 @@ export default function App() {
         {/* Hero Title & Live Status */}
         <div className="text-center pt-6 pb-1 max-w-[1600px] mx-auto">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-normal tracking-tight text-white/95">
-            Queen Elizabeth's School Robotics Stats ({selectedProgram})
+            Robotics Stats ({selectedProgram})
           </h1>
           <p className="text-slate-400 text-xs sm:text-sm mt-1.5 max-w-2xl mx-auto">
             Official performance benchmarks, robot skills rankings, tournament awards, and match telemetry.
@@ -780,7 +772,7 @@ export default function App() {
               <table className="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-slate-900/90 text-slate-300 font-semibold border-b border-slate-800 text-[11px] sm:text-xs uppercase tracking-wider">
-                    <th className="py-3.5 px-4 text-center w-16">QE Rank</th>
+                    <th className="py-3.5 px-4 text-center w-16">Rank</th>
                     <th className="py-3.5 px-4">Team</th>
                     <th className="py-3.5 px-4 text-right">Total PB</th>
                     <th className="py-3.5 px-4 text-right">Driver Score</th>
@@ -1098,7 +1090,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="w-full border-t border-slate-800/80 py-4 px-6 text-center text-xs sm:text-sm text-slate-400 flex flex-col sm:flex-row items-center justify-between max-w-[1600px] mx-auto gap-2">
-        <p>© {new Date().getFullYear()} QE Robotics • Queen Elizabeth's School, Barnet</p>
+        <p>© {new Date().getFullYear()} Robotics Stats</p>
         <p className="text-slate-500 text-xs">
           VEX Robotics Competition Performance Portal
         </p>
@@ -1251,7 +1243,7 @@ export default function App() {
                   type="text"
                   value={homeUrlInput}
                   onChange={(e) => setHomeUrlInput(e.target.value)}
-                  placeholder="e.g. # or https://qerobotics.org"
+                  placeholder="e.g. # or https://example.org"
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-[#cbb58c]"
                 />
                 <p className="text-[11px] text-slate-400 mt-1">

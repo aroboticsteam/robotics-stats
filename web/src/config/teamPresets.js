@@ -1,8 +1,8 @@
 export const REMOTE_CONFIG_URL = 'https://api.vmd1.dev/v1/config/qerobotics-stats';
 
 export const DEFAULT_TEAMS = {
-  VIQRC: ['21549A', '21549B', '21549C', '21549D', '21549E', '21549F'],
-  V5RC: ['21549M', '21549S', '21549V', '21549W', '21549X', '21549Y', '21549Z']
+  VIQRC: [],
+  V5RC: []
 };
 
 export const DEFAULT_HOME_URL = '#';
@@ -46,20 +46,20 @@ export const fetchRemoteConfig = async () => {
 };
 
 export const getStoredHomeUrl = () => {
-  return localStorage.getItem('qe_home_url') || DEFAULT_HOME_URL;
+  return localStorage.getItem('robotics_home_url') || DEFAULT_HOME_URL;
 };
 
 export const saveStoredHomeUrl = (url) => {
   if (url && url.trim()) {
-    localStorage.setItem('qe_home_url', url.trim());
+    localStorage.setItem('robotics_home_url', url.trim());
   } else {
-    localStorage.setItem('qe_home_url', DEFAULT_HOME_URL);
+    localStorage.setItem('robotics_home_url', DEFAULT_HOME_URL);
   }
 };
 
 export const getStoredConfiguredTeams = () => {
   try {
-    const saved = localStorage.getItem('qe_configured_teams');
+    const saved = localStorage.getItem('robotics_configured_teams');
     if (saved) {
       return JSON.parse(saved);
     }
@@ -70,5 +70,5 @@ export const getStoredConfiguredTeams = () => {
 };
 
 export const saveStoredConfiguredTeams = (config) => {
-  localStorage.setItem('qe_configured_teams', JSON.stringify(config));
+  localStorage.setItem('robotics_configured_teams', JSON.stringify(config));
 };

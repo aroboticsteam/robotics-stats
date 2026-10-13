@@ -1,5 +1,5 @@
 {
-  "name": "qe-robotics-vex-proxy",
+  "name": "robotics-vex-proxy",
   "private": true,
   "version": "0.1.0",
   "scripts": {

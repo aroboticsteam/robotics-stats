@@ -1,4 +1,4 @@
-# qerobotics-stats
+# robotics-stats
 
 Monorepo:
 
