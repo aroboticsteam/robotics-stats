@@ -1,4 +1,4 @@
-name = "qe-robotics-vex-proxy"
+name = "qe-qe-robotics-vex-proxy"
 main = "src/index.js"
 compatibility_date = "2024-09-01"
 
