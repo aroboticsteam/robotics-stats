@@ -1,4 +1,4 @@
-name = "robotics-vex-proxy"
+name = "team-robotics-vex-proxy"
 main = "src/index.js"
 compatibility_date = "2024-09-01"
 
