@@ -1,7 +1,6 @@
 node_modules
 dist
-.DS_Store
-*.local
 .env
-.wrangler
-api/.dev.vars
+*.log
+.DS_Store
+media

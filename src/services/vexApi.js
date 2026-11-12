@@ -1,18 +1,5 @@
-export const DEFAULT_PROXY_BASE = 'https://api.vmd1.dev/v1/vex';
-
-export const getApiBaseUrl = () => {
-  const saved = localStorage.getItem('vex_api_base_url');
-  if (saved && saved.trim() && saved.trim() !== '/api/v2') return saved.trim();
-  return DEFAULT_PROXY_BASE;
-};
-
-export const setApiBaseUrl = (url) => {
-  if (url && url.trim()) {
-    localStorage.setItem('vex_api_base_url', url.trim());
-  } else {
-    localStorage.removeItem('vex_api_base_url');
-  }
-};
+// Same-origin proxy served by this container (holds the VEX API key and cache).
+export const API_BASE = '/api/vex';
 
 // 30 minute cache in localStorage
 const CACHE_PREFIX = 'vex_cache_v8_';
@@ -92,7 +79,7 @@ function runWithConcurrencyLimit(task) {
  * Fetch from proxy gateway with localStorage caching, automatic retry on 429, and pagination
  */
 async function fetchWithCache(path, params = {}, retryCount = 0) {
-  const baseUrl = getApiBaseUrl();
+  const baseUrl = API_BASE;
   const searchParams = new URLSearchParams();
 
   Object.entries(params).forEach(([k, v]) => {
