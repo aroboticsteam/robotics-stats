@@ -87,10 +87,10 @@ jobs:
       packages: write
     env:
       # Optional mirror to the homelab registry (registry.kmnet.uk). Enabled when
-      # the LOCAL_REGISTRY_USER / LOCAL_REGISTRY_PASSWORD repo secrets exist
+      # the KMNET_REGISTRY_USERNAME / KMNET_REGISTRY_PASSWORD repo secrets exist
       # (an lldap account in the registry-admin group).
       LOCAL_REGISTRY: registry.kmnet.uk
-      LOCAL_REGISTRY_USER: ${{ secrets.LOCAL_REGISTRY_USER }}
+      KMNET_REGISTRY_USERNAME: ${{ secrets.KMNET_REGISTRY_USERNAME }}
     steps:
       - name: Download digests
         uses: actions/download-artifact@v4
@@ -130,16 +130,16 @@ jobs:
         run: docker buildx imagetools inspect ${{ env.IMAGE }}:${{ steps.meta.outputs.version }}
 
       - name: Log in to the local registry
-        if: env.LOCAL_REGISTRY_USER != ''
+        if: env.KMNET_REGISTRY_USERNAME != ''
         uses: docker/login-action@v3
         with:
           registry: ${{ env.LOCAL_REGISTRY }}
-          username: ${{ secrets.LOCAL_REGISTRY_USER }}
-          password: ${{ secrets.LOCAL_REGISTRY_PASSWORD }}
+          username: ${{ secrets.KMNET_REGISTRY_USERNAME }}
+          password: ${{ secrets.KMNET_REGISTRY_PASSWORD }}
 
       # Copy every tag just pushed to GHCR to the local registry (multi-arch kept).
       - name: Mirror tags to the local registry
-        if: env.LOCAL_REGISTRY_USER != ''
+        if: env.KMNET_REGISTRY_USERNAME != ''
         env:
           LOCAL_IMAGE: ${{ env.LOCAL_REGISTRY }}/${{ github.event.repository.name }}
         run: |
