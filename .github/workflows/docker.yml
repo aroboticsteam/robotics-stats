@@ -85,6 +85,12 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      # Optional mirror to the homelab registry (registry.example.net). Enabled when
+      # the LOCAL_REGISTRY_USER / LOCAL_REGISTRY_PASSWORD repo secrets exist
+      # (an lldap account in the registry-admin group).
+      LOCAL_REGISTRY: registry.example.net
+      LOCAL_REGISTRY_USER: ${{ secrets.LOCAL_REGISTRY_USER }}
     steps:
       - name: Download digests
         uses: actions/download-artifact@v4
@@ -122,3 +128,21 @@ jobs:
 
       - name: Inspect
         run: docker buildx imagetools inspect ${{ env.IMAGE }}:${{ steps.meta.outputs.version }}
+
+      - name: Log in to the local registry
+        if: env.LOCAL_REGISTRY_USER != ''
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.LOCAL_REGISTRY }}
+          username: ${{ secrets.LOCAL_REGISTRY_USER }}
+          password: ${{ secrets.LOCAL_REGISTRY_PASSWORD }}
+
+      # Copy every tag just pushed to GHCR to the local registry (multi-arch kept).
+      - name: Mirror tags to the local registry
+        if: env.LOCAL_REGISTRY_USER != ''
+        env:
+          LOCAL_IMAGE: ${{ env.LOCAL_REGISTRY }}/${{ github.event.repository.name }}
+        run: |
+          for tag in $(jq -r '.tags[]' <<< "$DOCKER_METADATA_OUTPUT_JSON"); do
+            docker buildx imagetools create -t "${LOCAL_IMAGE}:${tag##*:}" "${IMAGE}:${tag##*:}"
+          done
