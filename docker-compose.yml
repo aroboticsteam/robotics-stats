@@ -1,0 +1,10 @@
+services:
+  robotics-stats:
+    build: .
+    image: robotics-stats
+    env_file: .env
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./media:/media:ro   # optional: local logos, referenced as /media/<file>
+    restart: unless-stopped

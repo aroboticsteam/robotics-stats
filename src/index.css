@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fallback theme (the server overrides these from env at request time) */
+:root {
+  --accent: 203 181 140;
+  --accent-light: 232 215 184;
+  --accent-hover: 216 197 159;
+  --surface: 17 28 46;
+  --panel: 20 33 55;
+  --panel-2: 27 43 69;
+  --panel-3: 34 54 87;
+  color-scheme: dark;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: rgb(var(--surface));
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0d1522;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1f2f49;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--accent));
+}
