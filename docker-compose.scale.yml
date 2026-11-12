@@ -1,0 +1,23 @@
+# Horizontally scaled stack: N stateless replicas behind nginx, sharing one Redis cache.
+#   docker compose -f docker-compose.scale.yml up --build --scale stats=3
+services:
+  stats:
+    build: .
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379
+    depends_on: [redis]
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
+    restart: unless-stopped
+
+  lb:
+    image: nginx:alpine
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8081:80"
+    depends_on: [stats]
