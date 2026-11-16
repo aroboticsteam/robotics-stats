@@ -27,7 +27,7 @@ docker run --rm -p 8081:8080 -e VEX_API_KEY=... -e TEAMS_VIQRC=1234A,1234B -e TE
 | `TEAMS_VIQRC`, `TEAMS_V5RC` | _(empty)_ | Comma-separated team numbers per program |
 | `DEFAULT_PROGRAM` | `VIQRC` | Program shown at `/` (`VIQRC` or `V5RC`) |
 | `SITE_TITLE`, `SITE_SUBTITLE` | `Robotics Stats`, generic | Header text |
-| `LOGO_URL`, `LOGO_ALT`, `LOGO_HREF`, `LOGO_WHITE_BG` | _(none)_, `true` | Header logo (URL or `/media/<file>`) |
+| `LOGO_URL`, `LOGO_DARK_URL`, `LOGO_ALT`, `LOGO_HREF` | _(none)_ | Logo shown above the heading. `LOGO_URL` is for light backgrounds (dark text), `LOGO_DARK_URL` the inverted version used in dark mode; with only `LOGO_URL` it is shown as-is in both. Flat white/navy backgrounds are blended away, so no box is drawn. `LOGO_HREF` makes it a link. URLs can be `/media/<file>` |
 | `FAVICON_URL` | logo | Favicon |
 | `HOME_URL`, `HOME_LABEL` | _(hidden)_, `Home` | Top-left link back to e.g. robotics-home |
 | `FOOTER_TEXT`, `FOOTER_SECONDARY_TEXT` | `© <year> <title>`, `VEX Robotics Competition` | Footer |

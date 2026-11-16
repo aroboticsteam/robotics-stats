@@ -82,6 +82,12 @@ const css = [
   mode === 'auto' ? `@media (prefers-color-scheme: light){:root{${vars(light)};color-scheme:light}}` : '',
 ].join('');
 
-export const themeCss = css;
+// Logo variants: .logo-light (for light backgrounds) and .logo-dark (inverted, for dark mode) swap with the colour scheme.
+const logoCss =
+  mode === 'light' ? '.logo-dark{display:none!important}'
+  : mode === 'dark' ? '.logo-light{display:none!important}'
+  : '.logo-light{display:none!important}@media (prefers-color-scheme: light){.logo-light{display:inline!important}.logo-dark{display:none!important}}';
+
+export const themeCss = css + logoCss;
 export const themeColor = mode === 'light' ? light.BG : dark.BG;
 export const colorScheme = mode === 'auto' ? 'dark light' : mode;
