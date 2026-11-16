@@ -2,8 +2,8 @@ import React from 'react';
 
 /**
  * The school logo. `logo.src` is the version for light backgrounds (dark text); `logo.darkSrc` (LOGO_DARK_URL) is the
- * inverted version for dark mode. The two are swapped by colour scheme in CSS (see theme.js), and blend modes drop
- * their flat backgrounds, so no box or white plate is needed. With a single logo it is shown as-is in both modes.
+ * inverted version for dark mode. The two are swapped by colour scheme in CSS (see theme.js). Use files with a transparent
+ * background (PNG/SVG/WebP) so no box shows. With a single logo it is shown as-is in both modes.
  */
 export default function Logo({ logo, className = '' }) {
   if (!logo) return null;

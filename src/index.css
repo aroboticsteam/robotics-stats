@@ -44,6 +44,3 @@ h1, h2, h3, .font-heading {
   font-family: var(--font-heading);
 }
 
-/* The logo files have flat backgrounds (white, and navy): blend them away instead of boxing the logo. */
-.logo-light { mix-blend-mode: multiply; }
-.logo-dark { mix-blend-mode: lighten; }
