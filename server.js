@@ -9,6 +9,7 @@ import tls from 'node:tls';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { themeCss, themeColor, colorScheme } from './theme.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(ROOT, 'dist');
@@ -28,14 +29,6 @@ const int = (name, fallback) => {
   const n = Number(str(name, String(fallback)));
   return Number.isFinite(n) && n >= 0 ? n : fail(`${name} must be a non-negative number`);
 };
-const hex = (name, fallback) => {
-  const v = str(name, fallback);
-  if (!/^#?[0-9a-f]{6}$/i.test(v)) fail(`${name} must be a 6-digit hex colour (got "${v}")`);
-  return '#' + v.replace('#', '');
-};
-const toRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-const mix = (h, target, t) => toRgb(h).map((c, i) => Math.round(c + (target[i] - c) * t));
-const triple = (c) => c.join(' ');
 const teamList = (name) => str(name).split(',').map((t) => t.trim().toUpperCase()).filter(Boolean);
 
 // ----------------------------------------------------------------- config
@@ -44,10 +37,6 @@ const title = str('SITE_TITLE', 'Robotics Stats');
 const defaultProgram = str('DEFAULT_PROGRAM', 'VIQRC').toUpperCase();
 if (!['VIQRC', 'V5RC'].includes(defaultProgram)) fail('DEFAULT_PROGRAM must be VIQRC or V5RC');
 
-const accent = hex('ACCENT_COLOR', '#cbb58c');
-const surface = hex('BACKGROUND_COLOR', '#111c2e');
-const panel = hex('PANEL_COLOR', '#142137');
-const WHITE = [255, 255, 255];
 
 const siteConfig = {
   title,
@@ -66,7 +55,6 @@ const siteConfig = {
   },
 };
 
-const themeCss = `:root{--accent:${triple(toRgb(accent))};--accent-light:${triple(mix(accent, WHITE, 0.35))};--accent-hover:${triple(mix(accent, WHITE, 0.15))};--surface:${triple(toRgb(surface))};--panel:${triple(toRgb(panel))};--panel-2:${triple(mix(panel, WHITE, 0.06))};--panel-3:${triple(mix(panel, WHITE, 0.12))}}`;
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 const inlineJson = (o) => JSON.stringify(o).replace(/</g, '\\u003c').replace(/[\u2028\u2029]/g, (c) => '\\u' + c.charCodeAt(0).toString(16));
@@ -74,6 +62,8 @@ const inlineJson = (o) => JSON.stringify(o).replace(/</g, '\\u003c').replace(/[\
 const favicon = str('FAVICON_URL') || (siteConfig.logo ? siteConfig.logo.src : '');
 const runtimeHead = [
   `<title>${esc(title)}</title>`,
+  `<meta name="color-scheme" content="${colorScheme}" />`,
+  `<meta name="theme-color" content="${themeColor}" />`,
   favicon ? `<link rel="icon" href="${esc(favicon)}" />` : '',
   `<style>${themeCss}</style>`,
   `<script>window.__SITE_CONFIG__=${inlineJson(siteConfig)};</script>`,
