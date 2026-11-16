@@ -44,7 +44,7 @@ const siteConfig = {
   homeUrl: str('HOME_URL'),
   homeLabel: str('HOME_LABEL', 'Home'),
   logo: str('LOGO_URL')
-    ? { src: str('LOGO_URL'), alt: str('LOGO_ALT', `${title} logo`), href: str('LOGO_HREF'), whiteBg: bool('LOGO_WHITE_BG', true) }
+    ? { src: str('LOGO_URL'), darkSrc: str('LOGO_DARK_URL'), alt: str('LOGO_ALT', `${title} logo`), href: str('LOGO_HREF') }
     : null,
   teams: { VIQRC: teamList('TEAMS_VIQRC'), V5RC: teamList('TEAMS_V5RC') },
   defaultProgram,
