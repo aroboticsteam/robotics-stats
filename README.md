@@ -27,11 +27,16 @@ docker run --rm -p 8081:8080 -e VEX_API_KEY=... -e TEAMS_VIQRC=1234A,1234B -e TE
 | `TEAMS_VIQRC`, `TEAMS_V5RC` | _(empty)_ | Comma-separated team numbers per program |
 | `DEFAULT_PROGRAM` | `VIQRC` | Program shown at `/` (`VIQRC` or `V5RC`) |
 | `SITE_TITLE`, `SITE_SUBTITLE` | `Robotics Stats`, generic | Header text |
-| `LOGO_URL`, `LOGO_ALT`, `LOGO_HREF`, `LOGO_WHITE_BG` | _(none)_, `true` | Header logo (URL or `/media/<file>`) |
+| `LOGO_URL`, `LOGO_DARK_URL`, `LOGO_ALT`, `LOGO_HREF` | _(none)_ | Logo shown above the heading. `LOGO_URL` is for light backgrounds (dark text), `LOGO_DARK_URL` the inverted version used in dark mode; with only `LOGO_URL` it is shown as-is in both. Flat white/navy backgrounds are blended away, so no box is drawn. `LOGO_HREF` makes it a link. URLs can be `/media/<file>` |
 | `FAVICON_URL` | logo | Favicon |
 | `HOME_URL`, `HOME_LABEL` | _(hidden)_, `Home` | Top-left link back to e.g. robotics-home |
 | `FOOTER_TEXT`, `FOOTER_SECONDARY_TEXT` | `© <year> <title>`, `VEX Robotics Competition` | Footer |
-| `ACCENT_COLOR`, `BACKGROUND_COLOR`, `PANEL_COLOR` | `#cbb58c`, `#111c2e`, `#142137` | Theme (6-digit hex) |
+| `THEME_MODE` | `auto` | `auto` (dark, light when the visitor's system prefers it), `dark` or `light` |
+| `THEME_<TOKEN>` | QE brand (navy) | Dark palette, 6-digit hex. `<TOKEN>` is `BG` `BG2` `CARD` `RAISE` `LINE` `INK` `MUTED` `ACCENT` `LINK` `OK` `RED` `BLUE`, e.g. `THEME_BG=#000E23` |
+| `THEME_LIGHT_<TOKEN>` | QE brand (light) | Same tokens for the light palette, e.g. `THEME_LIGHT_BG=#F2F4F7` |
+| `IQ_COLOR`, `V5_COLOR` | `#0C7C9D`, `#9A2339` | Programme colours (VEX IQ, V5) |
+| `FONT_HEADING`, `FONT_HEADING_URL` | `Space Grotesk`, `/fonts/space-grotesk.woff2` | Heading font and its woff2 (shipped in the image; set the URL to an empty value to use the system font) |
+| `ACCENT_COLOR`, `BACKGROUND_COLOR`, `PANEL_COLOR` | _(unset)_ | Older names for `THEME_ACCENT`, `THEME_BG`, `THEME_CARD` (dark palette) |
 | `AUTO_REFRESH_SECONDS` | `180` | Browser refresh interval |
 | `CACHE_FRESH_SECONDS` | `7200` | Proxy serves entries this old without refreshing (seasons: 3x) |
 | `CACHE_MAX_AGE_SECONDS` | `604800` | Entries older than this are dropped; stale entries are served while refreshing |
