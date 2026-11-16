@@ -38,6 +38,7 @@ import {
   clearLocalStorageCache
 } from './services/vexApi';
 import { runtimeConfig as config } from './config/runtimeConfig';
+import Logo from './components/Logo';
 
 const AUTO_REFRESH_INTERVAL_SECONDS = config.autoRefreshSeconds;
 
@@ -443,20 +444,8 @@ export default function App() {
       <header className="w-full bg-surface border-b border-slate-800/80 pt-4 pb-4 px-4 sm:px-8 lg:px-12">
         <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-4">
           
-          {/* Left: Logo & Home Link */}
+          {/* Left: Home link */}
           <div className="flex items-center justify-center md:justify-start gap-3">
-            {config.logo && (() => {
-              const img = (
-                <img src={config.logo.src} alt={config.logo.alt} className="h-8 sm:h-9 w-auto object-contain" />
-              );
-              const box = `${config.logo.whiteBg ? 'bg-white px-3.5 py-1.5 rounded-xl shadow-md' : ''} flex items-center justify-center`;
-              return config.logo.href ? (
-                <a href={config.logo.href} target="_blank" rel="noopener noreferrer" className={box}>{img}</a>
-              ) : (
-                <div className={box}>{img}</div>
-              );
-            })()}
-
             {config.homeUrl && (
               <a
                 href={config.homeUrl}
@@ -488,8 +477,9 @@ export default function App() {
         </div>
 
         {/* Hero Title & Live Status */}
-        <div className="text-center pt-6 pb-1 max-w-[1600px] mx-auto">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-ink">
+        <div className="text-center pt-2 pb-1 max-w-[1600px] mx-auto">
+          <Logo logo={config.logo} className="h-24 sm:h-28 mx-auto" />
+          <h1 className="mt-3 text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-ink">
             {config.title} ({selectedProgram})
           </h1>
           {config.subtitle && (
