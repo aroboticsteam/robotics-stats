@@ -38,6 +38,7 @@ import {
   clearLocalStorageCache
 } from './services/vexApi';
 import { runtimeConfig as config } from './config/runtimeConfig';
+import Logo from './components/Logo';
 
 const AUTO_REFRESH_INTERVAL_SECONDS = config.autoRefreshSeconds;
 
@@ -443,20 +444,8 @@ export default function App() {
       <header className="w-full bg-surface border-b border-slate-800/80 pt-4 pb-4 px-4 sm:px-8 lg:px-12">
         <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-4">
           
-          {/* Left: Logo & Home Link */}
+          {/* Left: Home link */}
           <div className="flex items-center justify-center md:justify-start gap-3">
-            {config.logo && (() => {
-              const img = (
-                <img src={config.logo.src} alt={config.logo.alt} className="h-8 sm:h-9 w-auto object-contain" />
-              );
-              const box = `${config.logo.whiteBg ? 'bg-white px-3.5 py-1.5 rounded-xl shadow-md' : ''} flex items-center justify-center`;
-              return config.logo.href ? (
-                <a href={config.logo.href} target="_blank" rel="noopener noreferrer" className={box}>{img}</a>
-              ) : (
-                <div className={box}>{img}</div>
-              );
-            })()}
-
             {config.homeUrl && (
               <a
                 href={config.homeUrl}
@@ -477,7 +466,7 @@ export default function App() {
             <button 
               onClick={() => loadPerformanceData(true)}
               disabled={loading}
-              className="px-3.5 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl border border-slate-700/80 flex items-center gap-2 transition-all shadow hover:text-white cursor-pointer"
+              className="px-3.5 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm rounded-xl border border-slate-700/80 flex items-center gap-2 transition-all shadow hover:text-ink cursor-pointer"
               title="Force Refresh Data"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-accent ${loading ? 'animate-spin' : ''}`} />
@@ -488,8 +477,9 @@ export default function App() {
         </div>
 
         {/* Hero Title & Live Status */}
-        <div className="text-center pt-6 pb-1 max-w-[1600px] mx-auto">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-normal tracking-tight text-white/95">
+        <div className="text-center pt-2 pb-1 max-w-[1600px] mx-auto">
+          <Logo logo={config.logo} className="h-24 sm:h-28 mx-auto" />
+          <h1 className="mt-3 text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-ink">
             {config.title} ({selectedProgram})
           </h1>
           {config.subtitle && (
@@ -515,7 +505,7 @@ export default function App() {
               onClick={() => navigateToRoute('VIQRC', seasonMode)}
               className={`flex-1 sm:flex-initial px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 selectedProgram === 'VIQRC'
-                  ? 'bg-gradient-to-r from-sky-600 to-blue-700 text-white shadow-md'
+                  ? 'bg-iq text-white shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -530,7 +520,7 @@ export default function App() {
               onClick={() => navigateToRoute('V5RC', seasonMode)}
               className={`flex-1 sm:flex-initial px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 selectedProgram === 'V5RC'
-                  ? 'bg-gradient-to-r from-rose-600 to-red-700 text-white shadow-md'
+                  ? 'bg-v5 text-white shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -588,11 +578,11 @@ export default function App() {
         {/* Quick KPI Stat Cards */}
         <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-panel/80 border border-slate-800/80 rounded-xl p-4 flex items-center gap-3.5 shadow-lg">
-            <div className="w-11 h-11 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+            <div className="w-11 h-11 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
               <Trophy className="w-5 h-5 text-accent" />
             </div>
             <div>
-              <div className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              <div className="text-xl sm:text-2xl font-bold text-ink tracking-tight">
                 {loading ? '...' : summaryMetrics.totalAwards}
               </div>
               <div className="text-[11px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">
@@ -602,11 +592,11 @@ export default function App() {
           </div>
 
           <div className="bg-panel/80 border border-slate-800/80 rounded-xl p-4 flex items-center gap-3.5 shadow-lg">
-            <div className="w-11 h-11 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="w-5 h-5 text-sky-400" />
+            <div className="w-11 h-11 rounded-lg bg-link/10 border border-link/20 flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-5 h-5 text-link" />
             </div>
             <div>
-              <div className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              <div className="text-xl sm:text-2xl font-bold text-ink tracking-tight">
                 {loading ? '...' : summaryMetrics.maxOverallSkills}
               </div>
               <div className="text-[11px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">
@@ -616,11 +606,11 @@ export default function App() {
           </div>
 
           <div className="bg-panel/80 border border-slate-800/80 rounded-xl p-4 flex items-center gap-3.5 shadow-lg">
-            <div className="w-11 h-11 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
-              <Medal className="w-5 h-5 text-emerald-400" />
+            <div className="w-11 h-11 rounded-lg bg-ok/10 border border-ok/20 flex items-center justify-center flex-shrink-0">
+              <Medal className="w-5 h-5 text-ok" />
             </div>
             <div>
-              <div className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              <div className="text-xl sm:text-2xl font-bold text-ink tracking-tight">
                 {loading ? '...' : summaryMetrics.topTeam}
               </div>
               <div className="text-[11px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">
@@ -630,11 +620,11 @@ export default function App() {
           </div>
 
           <div className="bg-panel/80 border border-slate-800/80 rounded-xl p-4 flex items-center gap-3.5 shadow-lg">
-            <div className="w-11 h-11 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center flex-shrink-0">
-              <Activity className="w-5 h-5 text-rose-400" />
+            <div className="w-11 h-11 rounded-lg bg-red/10 border border-red/20 flex items-center justify-center flex-shrink-0">
+              <Activity className="w-5 h-5 text-red" />
             </div>
             <div>
-              <div className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              <div className="text-xl sm:text-2xl font-bold text-ink tracking-tight">
                 {teamConfig[selectedProgram]?.length || 0}
               </div>
               <div className="text-[11px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">
@@ -688,9 +678,9 @@ export default function App() {
           <div className="bg-panel/90 border border-slate-700/80 rounded-2xl overflow-hidden shadow-2xl">
             <div className="p-4 sm:p-6 border-b border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                <h3 className="text-lg sm:text-xl font-bold text-ink flex items-center gap-2">
                   <span>Robot Skills Rankings & High Scores</span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-iq/20 text-link border border-iq/40">
                     {selectedProgram}
                   </span>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
@@ -746,20 +736,20 @@ export default function App() {
                         <td className="py-3.5 px-4 text-center">
                           <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
                             idx === 0 
-                              ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20 ring-2 ring-amber-400/40' 
+                              ? 'bg-accent text-slate-950 shadow-md shadow-accent/20 ring-2 ring-accent/40' 
                               : idx === 1 
                               ? 'bg-slate-300 text-slate-950 font-bold' 
                               : idx === 2 
-                              ? 'bg-amber-700 text-amber-100 font-bold'
+                              ? 'bg-accent/30 text-accent font-bold'
                               : 'bg-slate-800 text-slate-300'
                           }`}>
                             {idx + 1}
                           </span>
                         </td>
                         <td className="py-3.5 px-4">
-                          <div className="font-bold text-white text-sm sm:text-base group-hover:text-accent transition-colors flex items-center gap-2">
+                          <div className="font-bold text-ink text-sm sm:text-base group-hover:text-accent transition-colors flex items-center gap-2">
                             <span>{row.number}</span>
-                            {idx === 0 && <Sparkles className="w-3.5 h-3.5 text-amber-400" />}
+                            {idx === 0 && <Sparkles className="w-3.5 h-3.5 text-accent" />}
                           </div>
                           <div className="text-xs text-slate-400 font-normal truncate max-w-[180px]">
                             {row.name}
@@ -768,13 +758,13 @@ export default function App() {
                         <td className="py-3.5 px-4 text-right font-mono font-bold text-sm sm:text-base text-accent-light">
                           {row.total}
                         </td>
-                        <td className="py-3.5 px-4 text-right font-mono text-cyan-300 font-bold">
+                        <td className="py-3.5 px-4 text-right font-mono text-link font-bold">
                           {row.driver}
                         </td>
                         <td className="py-3.5 px-4 text-center font-mono text-slate-400 text-xs">
                           {row.bestDriverAttempts !== '-' ? `${row.bestDriverAttempts} / 3` : '-'}
                         </td>
-                        <td className="py-3.5 px-4 text-right font-mono text-indigo-300 font-bold">
+                        <td className="py-3.5 px-4 text-right font-mono text-blue font-bold">
                           {row.auton}
                         </td>
                         <td className="py-3.5 px-4 text-center font-mono text-slate-400 text-xs">
@@ -810,9 +800,9 @@ export default function App() {
           <div className="bg-panel/90 border border-slate-700/80 rounded-2xl overflow-hidden shadow-2xl">
             <div className="p-4 sm:p-6 border-b border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                <h3 className="text-lg sm:text-xl font-bold text-ink flex items-center gap-2">
                   <span>Tournament, Match & Ranking Stats</span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-v5/20 text-red border border-v5/40">
                     {selectedProgram}
                   </span>
                 </h3>
@@ -860,28 +850,28 @@ export default function App() {
                         <td className="py-3.5 px-4 text-center">
                           <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
                             idx === 0 
-                              ? 'bg-amber-400 text-slate-950 font-bold' 
+                              ? 'bg-accent text-slate-950 font-bold' 
                               : idx === 1 
                               ? 'bg-slate-300 text-slate-950 font-bold' 
                               : idx === 2 
-                              ? 'bg-amber-700 text-amber-100 font-bold'
+                              ? 'bg-accent/30 text-accent font-bold'
                               : 'bg-slate-800 text-slate-300'
                           }`}>
                             {idx + 1}
                           </span>
                         </td>
                         <td className="py-3.5 px-4">
-                          <div className="font-bold text-white text-sm sm:text-base group-hover:text-accent transition-colors">
+                          <div className="font-bold text-ink text-sm sm:text-base group-hover:text-accent transition-colors">
                             {row.number}
                           </div>
                           <div className="text-xs text-slate-400 font-normal truncate max-w-[180px]">
                             {row.name}
                           </div>
                         </td>
-                        <td className="py-3.5 px-4 text-center font-bold text-emerald-400">
+                        <td className="py-3.5 px-4 text-center font-bold text-ok">
                           {row.eventWins > 0 ? (
-                            <span className="inline-flex items-center gap-1 bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-500/30">
-                              <Trophy className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="inline-flex items-center gap-1 bg-ok/10 px-2.5 py-1 rounded-full border border-ok/30">
+                              <Trophy className="w-3.5 h-3.5 text-ok" />
                               {row.eventWins}
                             </span>
                           ) : (
@@ -899,7 +889,7 @@ export default function App() {
                             {row.awardsCount}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-right font-mono font-bold text-cyan-300">
+                        <td className="py-3.5 px-4 text-right font-mono font-bold text-link">
                           {row.hiSkills}
                         </td>
                         <td className="py-3.5 px-4 text-center font-mono text-slate-400 font-bold">
@@ -919,9 +909,9 @@ export default function App() {
           <div className="bg-panel/90 border border-slate-700/80 rounded-2xl overflow-hidden shadow-2xl">
             <div className="p-4 sm:p-6 border-b border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                <h3 className="text-lg sm:text-xl font-bold text-ink flex items-center gap-2">
                   <span>Honours & Awards Distribution</span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-accent/20 text-accent border border-accent/30">
                     {selectedProgram}
                   </span>
                 </h3>
@@ -971,18 +961,18 @@ export default function App() {
                         <td className="py-3.5 px-4 text-center">
                           <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
                             idx === 0 
-                              ? 'bg-amber-400 text-slate-950 font-bold' 
+                              ? 'bg-accent text-slate-950 font-bold' 
                               : idx === 1 
                               ? 'bg-slate-300 text-slate-950 font-bold' 
                               : idx === 2 
-                              ? 'bg-amber-700 text-amber-100 font-bold'
+                              ? 'bg-accent/30 text-accent font-bold'
                               : 'bg-slate-800 text-slate-300'
                           }`}>
                             {idx + 1}
                           </span>
                         </td>
                         <td className="py-3.5 px-4">
-                          <div className="font-bold text-white text-sm sm:text-base group-hover:text-accent transition-colors">
+                          <div className="font-bold text-ink text-sm sm:text-base group-hover:text-accent transition-colors">
                             {row.number}
                           </div>
                           <div className="text-xs text-slate-400 font-normal truncate max-w-[180px]">
@@ -994,13 +984,13 @@ export default function App() {
                             {row.total}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-center font-bold text-amber-300">
+                        <td className="py-3.5 px-4 text-center font-bold text-accent">
                           {row.excellence || '-'}
                         </td>
-                        <td className="py-3.5 px-4 text-center font-bold text-emerald-400">
+                        <td className="py-3.5 px-4 text-center font-bold text-ok">
                           {row.tc || '-'}
                         </td>
-                        <td className="py-3.5 px-4 text-center font-bold text-cyan-300">
+                        <td className="py-3.5 px-4 text-center font-bold text-link">
                           {row.skills || '-'}
                         </td>
                         <td className="py-3.5 px-4 text-center text-slate-300">
@@ -1048,7 +1038,7 @@ export default function App() {
                 <span className="inline-block px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider rounded-full bg-accent/20 text-accent-light border border-accent/30 mb-2">
                   {selectedTeamModal.team?.program?.code || selectedProgram} Team Record
                 </span>
-                <h3 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+                <h3 className="text-2xl sm:text-3xl font-bold text-ink flex items-center gap-3">
                   <span>Team {selectedTeamModal.team?.number}</span>
                   <span className="text-base font-medium text-accent">
                     {selectedTeamModal.team?.team_name}
@@ -1060,7 +1050,7 @@ export default function App() {
               </div>
               <button 
                 onClick={() => setSelectedTeamModal(null)}
-                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer"
+                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-ink cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1083,7 +1073,7 @@ export default function App() {
                       <div key={i} className="bg-slate-900/70 border border-slate-800 rounded-xl p-3 flex items-start gap-2.5">
                         <Trophy className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
                         <div>
-                          <div className="text-xs font-bold text-white">{award.title}</div>
+                          <div className="text-xs font-bold text-ink">{award.title}</div>
                           <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">{award.event?.name}</div>
                         </div>
                       </div>
@@ -1106,7 +1096,7 @@ export default function App() {
                       <div key={i} className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3 flex items-center justify-between gap-3 text-xs">
                         <div>
                           <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold uppercase mr-2 ${
-                            skill.type === 'driver' ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'bg-indigo-950 text-indigo-300 border border-indigo-800'
+                            skill.type === 'driver' ? 'bg-link/10 text-link border border-link/30' : 'bg-blue/10 text-blue border border-blue/30'
                           }`}>
                             {skill.type}
                           </span>
@@ -1114,7 +1104,7 @@ export default function App() {
                         </div>
                         <div className="flex items-center gap-3 font-mono">
                           <span className="text-slate-400">Rank: #{skill.rank}</span>
-                          <span className="text-white font-bold text-sm bg-slate-800 px-2 py-0.5 rounded">{skill.score} pts</span>
+                          <span className="text-ink font-bold text-sm bg-slate-800 px-2 py-0.5 rounded">{skill.score} pts</span>
                         </div>
                       </div>
                     ))}

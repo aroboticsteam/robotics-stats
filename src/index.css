@@ -2,26 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Fallback theme (the server overrides these from env at request time) */
-:root {
-  --accent: 203 181 140;
-  --accent-light: 232 215 184;
-  --accent-hover: 216 197 159;
-  --surface: 17 28 46;
-  --panel: 20 33 55;
-  --panel-2: 27 43 69;
-  --panel-3: 34 54 87;
-  color-scheme: dark;
-}
-
-:root {
+/* Dev-only fallback (`npm run dev`): the server injects the real palette from THEME_* env vars at request time. */
+:where(:root) {
+  --bg: 15 23 42; --bg-2: 19 29 51; --card: 30 41 59; --raise: 39 52 73; --line: 51 65 85;
+  --ink: 241 245 249; --muted: 148 163 184; --accent: 96 165 250; --accent-light: 224 214 190; --accent-hover: 212 199 163;
+  --link: 56 189 248; --ok: 74 222 128; --red: 248 113 113; --blue: 147 197 253; --iq: 8 145 178; --v5: 220 38 38;
+  --s-950: 15 23 42; --s-900: 30 41 59; --s-800: 39 52 73; --s-700: 51 65 85; --s-600: 62 83 110; --s-500: 98 118 146;
+  --s-400: 148 163 184; --s-300: 190 201 218; --s-200: 216 224 236; --s-100: 241 245 249; --s-50: 241 245 249;
+  --font-heading: system-ui, sans-serif;
   color-scheme: dark;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: rgb(var(--surface));
+  background-color: rgb(var(--bg));
+  color: rgb(var(--ink));
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
@@ -32,14 +28,22 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0d1522;
+  background: rgb(var(--bg-2));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1f2f49;
+  background: rgb(var(--line));
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(var(--accent));
 }
+
+h1, h2, h3, .font-heading {
+  font-family: var(--font-heading);
+}
+
+/* The logo files have flat backgrounds (white, and navy): blend them away instead of boxing the logo. */
+.logo-light { mix-blend-mode: multiply; }
+.logo-dark { mix-blend-mode: lighten; }
