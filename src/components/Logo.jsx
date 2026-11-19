@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * the site logo. `logo.src` is the version for light backgrounds (dark text); `logo.darkSrc` (LOGO_DARK_URL) is the
+ * The site logo. `logo.src` is the version for light backgrounds (dark text); `logo.darkSrc` (LOGO_DARK_URL) is the
  * inverted version for dark mode. The two are swapped by colour scheme in CSS (see theme.js). Use files with a transparent
  * background (PNG/SVG/WebP) so no box shows. With a single logo it is shown as-is in both modes.
  */

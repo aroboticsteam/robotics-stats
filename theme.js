@@ -1,7 +1,7 @@
 // Brand theme shared by robotics-home and robotics-stats (keep the two copies identical).
 //
 // Every colour, the heading font and the colour-scheme mode come from environment variables; the defaults
-// are the configurable brand (navy, gold, system font). The result is a block of CSS
+// are a neutral slate/blue palette with the system font. The result is a block of CSS
 // custom properties injected into the page, which Tailwind (tailwind.config.js) reads. Colours are stored
 // as "r g b" triples so Tailwind's opacity modifiers keep working.
 //
@@ -9,8 +9,8 @@
 //   THEME_<TOKEN>             dark palette, e.g. THEME_BG=#0F172A
 //   THEME_LIGHT_<TOKEN>       light palette, e.g. THEME_LIGHT_BG=#F1F5F9
 //   IQ_COLOR, V5_COLOR        programme colours (VEX IQ / V5)
-//   FONT_HEADING              heading font family (default "system font")
-//   FONT_HEADING_URL          woff2 for it (default /fonts/heading-font.woff2, shipped in the image); "" = none
+//   FONT_HEADING              heading font family (default: the system font)
+//   FONT_HEADING_URL          woff2 for it (a URL, or /media/<file> from a mounted volume); default none
 //   ACCENT_COLOR, BACKGROUND_COLOR, PANEL_COLOR   older names for THEME_ACCENT / THEME_BG / THEME_CARD
 //
 // TOKEN is one of: BG BG2 CARD RAISE LINE INK MUTED ACCENT LINK OK RED BLUE
@@ -36,7 +36,7 @@ const DARK = {
 };
 const LIGHT = {
   BG: '#F1F5F9', BG2: '#E2E8F0', CARD: '#FFFFFF', RAISE: '#F8FAFC', LINE: '#CBD5E1',
-  INK: '#0F172A', MUTED: '#475569', ACCENT: '#2563EB', LINK: '#0369A1', OK: '#15803D', RED: '#DC2626', BLUE: '#1D4ED8',
+  INK: '#0F172A', MUTED: '#475569', ACCENT: '#2563EB', LINK: '#0369A1', OK: '#15803D', RED: '#B91C1C', BLUE: '#1D4ED8',
 };
 const LEGACY = { ACCENT: 'ACCENT_COLOR', BG: 'BACKGROUND_COLOR', CARD: 'PANEL_COLOR' };
 
@@ -70,12 +70,13 @@ const dark = palette(DARK, 'THEME_');
 const light = palette(LIGHT, 'THEME_LIGHT_');
 const iq = hex('IQ_COLOR', '#0891B2');
 const v5 = hex('V5_COLOR', '#DC2626');
-const heading = str('FONT_HEADING', 'system font').replace(/["';{}<]/g, '');
-const headingUrl = env.FONT_HEADING_URL === undefined ? '/fonts/heading-font.woff2' : env.FONT_HEADING_URL;
+const heading = str('FONT_HEADING', '').replace(/["';{}<]/g, '');
+const headingUrl = str('FONT_HEADING_URL');
 
-const fixed = `--iq:${triple(iq)};--v5:${triple(v5)};--font-heading:"${heading}",system-ui,-apple-system,"Segoe UI",sans-serif`;
+const SYSTEM_FONT = 'system-ui,-apple-system,"Segoe UI",sans-serif';
+const fixed = `--iq:${triple(iq)};--v5:${triple(v5)};--font-heading:${heading ? `"${heading}",` : ''}${SYSTEM_FONT}`;
 const css = [
-  headingUrl
+  heading && headingUrl
     ? `@font-face{font-family:"${heading}";font-style:normal;font-weight:500 700;font-display:swap;src:url("${headingUrl.replace(/["<]/g, '')}") format("woff2")}`
     : '',
   `:root{${vars(mode === 'light' ? light : dark)};${fixed};color-scheme:${mode === 'light' ? 'light' : 'dark'}}`,
