@@ -32,10 +32,10 @@ docker run --rm -p 8081:8080 -e VEX_API_KEY=... -e TEAMS_VIQRC=1234A,1234B -e TE
 | `HOME_URL`, `HOME_LABEL` | _(hidden)_, `Home` | Top-left link back to e.g. robotics-home |
 | `FOOTER_TEXT`, `FOOTER_SECONDARY_TEXT` | `© <year> <title>`, `VEX Robotics Competition` | Footer |
 | `THEME_MODE` | `auto` | `auto` (dark, light when the visitor's system prefers it), `dark` or `light` |
-| `THEME_<TOKEN>` | configurable brand (navy) | Dark palette, 6-digit hex. `<TOKEN>` is `BG` `BG2` `CARD` `RAISE` `LINE` `INK` `MUTED` `ACCENT` `LINK` `OK` `RED` `BLUE`, e.g. `THEME_BG=#0F172A` |
-| `THEME_LIGHT_<TOKEN>` | configurable brand (light) | Same tokens for the light palette, e.g. `THEME_LIGHT_BG=#F1F5F9` |
+| `THEME_<TOKEN>` | Neutral slate (dark) | Dark palette, 6-digit hex. `<TOKEN>` is `BG` `BG2` `CARD` `RAISE` `LINE` `INK` `MUTED` `ACCENT` `LINK` `OK` `RED` `BLUE`, e.g. `THEME_BG=#0F172A` |
+| `THEME_LIGHT_<TOKEN>` | Neutral slate (light) | Same tokens for the light palette, e.g. `THEME_LIGHT_BG=#F1F5F9` |
 | `IQ_COLOR`, `V5_COLOR` | `#0891B2`, `#DC2626` | Programme colours (VEX IQ, V5) |
-| `FONT_HEADING`, `FONT_HEADING_URL` | `system font`, `/fonts/heading-font.woff2` | Heading font and its woff2 (shipped in the image; set the URL to an empty value to use the system font) |
+| `FONT_HEADING`, `FONT_HEADING_URL` | system font | Optional heading font family and a woff2 URL for it (e.g. `/media/heading.woff2` from a mounted volume) |
 | `ACCENT_COLOR`, `BACKGROUND_COLOR`, `PANEL_COLOR` | _(unset)_ | Older names for `THEME_ACCENT`, `THEME_BG`, `THEME_CARD` (dark palette) |
 | `AUTO_REFRESH_SECONDS` | `180` | Browser refresh interval |
 | `CACHE_FRESH_SECONDS` | `7200` | Proxy serves entries this old without refreshing (seasons: 3x) |
