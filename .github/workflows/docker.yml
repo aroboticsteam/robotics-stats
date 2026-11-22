@@ -86,10 +86,10 @@ jobs:
       contents: read
       packages: write
     env:
-      # Optional mirror to the homelab registry (registry.example.net). Enabled when
-      # the MIRROR_REGISTRY_USERNAME / MIRROR_REGISTRY_PASSWORD repo secrets exist
-      # (an lldap account in the registry-admin group).
-      LOCAL_REGISTRY: registry.example.net
+      # Optional mirror to a secondary registry. Enabled when the MIRROR_REGISTRY
+      # repo variable (host) and the MIRROR_REGISTRY_USERNAME /
+      # MIRROR_REGISTRY_PASSWORD repo secrets are all set; the host is not in code.
+      LOCAL_REGISTRY: ${{ vars.MIRROR_REGISTRY }}
       MIRROR_REGISTRY_USERNAME: ${{ secrets.MIRROR_REGISTRY_USERNAME }}
     steps:
       - name: Download digests
@@ -130,7 +130,7 @@ jobs:
         run: docker buildx imagetools inspect ${{ env.IMAGE }}:${{ steps.meta.outputs.version }}
 
       - name: Log in to the local registry
-        if: env.MIRROR_REGISTRY_USERNAME != ''
+        if: env.LOCAL_REGISTRY != '' && env.MIRROR_REGISTRY_USERNAME != ''
         uses: docker/login-action@v3
         with:
           registry: ${{ env.LOCAL_REGISTRY }}
@@ -139,7 +139,7 @@ jobs:
 
       # Copy every tag just pushed to GHCR to the local registry (multi-arch kept).
       - name: Mirror tags to the local registry
-        if: env.MIRROR_REGISTRY_USERNAME != ''
+        if: env.LOCAL_REGISTRY != '' && env.MIRROR_REGISTRY_USERNAME != ''
         env:
           LOCAL_IMAGE: ${{ env.LOCAL_REGISTRY }}/${{ github.event.repository.name }}
         run: |
